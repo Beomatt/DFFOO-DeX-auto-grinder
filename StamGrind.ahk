@@ -1,22 +1,35 @@
-; Start the script with Win+G AFTER letting the game Auto+ a single round.
+; Start the script with Win+G AFTER choosing NO support character.
 #g::
 
 ; Flag for the type of run.
-; 1. Orbs (15 sp)
-; 2. Summon Board (50? sp)
-; 3. WoI farm (? sp)
+; 0: No stamina used. Useful for outside of WoI
+; 1: Orbs (15 sp)
+; 2: Summon Boards/Edojas (50 sp)
 farmFlag := 0
 
+; Character flags. Use these to optimize the time of each run.
+; UNIMPLEMENTED
+; Each run is based on a MAXED character using AUTO+.
+; Exceptions are noted beside the character.
+; -1: Default (600ms/1 Minute per run)
+; 0: Squall
+; 1: Yuffie
+; 2: yuna
+; 3: Jack
+; 4: Eight
+; 5: Etc.
+charFlag := -1
+
 ; How long to wait between "next" and "retry" (in milliseconds).
-; Default 200/2 seconds.
+; Default 500/5 seconds.
 sleepRetry := 200
-; How long to wait between runs (in milliseconds).
-; Default 600/1 minute.
-sleepRun := 600
+; How long to wait for a single run.
+; Set with charFlag. Default is 600ms/1 Minute.
+sleepRun := 0
 
 ; How long loading takes (in milliseconds).
-; Default 0/MUST BE USER SET.
-sleepLoad := 0
+; Default 300/3 Seconds.
+sleepLoad := 3
 
 ; The position to click to hit to start the runs.
 clickStartPosX := 0
@@ -48,11 +61,22 @@ SetTimer, Stam_Calc, 600
 Switch %farmFlag%
 {
 	Case 1: ; Orbs.
-		stamPerRun = 15
-	Case 2: ; Summon Board.
-		stamPerRun = 50
-	Default: ; If no flag set don't even bother.
-		stamPerRun = 0
+		stamPerRun := 15
+	Case 2: ; Summon Board/Edojas.
+		stamPerRun := 50
+	Default: ; No stam grinding.
+		GoTo, No_Stam
+}
+
+Switch %charFlag%
+{
+	; TODO: get list of chars who can solo farm and optimize run time for each one.
+	Case 0: ;Squall
+		sleepRun := 0
+	Case 1: ;Yuffie
+		sleepRun := 0
+	Default
+		sleepRun := 600
 }
 
 ControlClick, %clickStartPosX% %clickStartPosY%, %dexTitle%
@@ -77,9 +101,24 @@ Loop
 	}
 	
 	ControlClick, %clickStamPosX% %clickStamPosY%, %dexTitle%
+	Sleep, %sleepRetry%
+	ControlClick, %clickRetryPosX% %clickRetryPosY%, %dexTitle%
 	currentStam := %currentStam% + 200
 	Sleep %sleepRun%
 }
+
+No_Stam:
+Loop
+	{
+		Loop 2
+		{
+			ControlClick, %clickRetryPosX% %clickRetryPosY%, %dexTitle%
+			Sleep, %sleepRetry%
+		}
+	
+		Sleep %sleepRun%
+	}
+
 
 Stam_Calc:
 currentStam := %currentStam% + 1
