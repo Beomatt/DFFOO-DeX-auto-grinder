@@ -1,3 +1,4 @@
+: Start the script with Win+G AFTER letting the game Auto+ a single round.
 #g::
 : The number of runs it takes for Stam to run out.
 regRun := 0
