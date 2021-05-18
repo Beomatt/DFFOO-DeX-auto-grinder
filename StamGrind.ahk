@@ -22,14 +22,14 @@ charFlag := -1
 
 ; How long to wait between "next" and "retry" (in milliseconds).
 ; Default 500/5 seconds.
-sleepRetry := 200
+sleepRetry := 500
 ; How long to wait for a single run.
 ; Set with charFlag. Default is 600ms/1 Minute.
-sleepRun := 0
+sleepRun := 600
 
 ; How long loading takes (in milliseconds).
 ; Default 300/3 Seconds.
-sleepLoad := 3
+sleepLoad := 300
 
 ; The position to click to hit to start the runs.
 clickStartPosX := 0
@@ -71,12 +71,12 @@ Switch %farmFlag%
 Switch %charFlag%
 {
 	; TODO: get list of chars who can solo farm and optimize run time for each one.
-	Case 0: ;Squall
+	Case 0: ;Squall's optimization is currently UNIMPLEMENTED
 		sleepRun := 0
-	Case 1: ;Yuffie
+	Case 1: ;Yuffie's optimization is currently UNIMPLEMENTED
 		sleepRun := 0
 	Default
-		sleepRun := 600
+		sleepRun := 600 ; It already defaults to this but just in case.
 }
 
 ControlClick, %clickStartPosX% %clickStartPosY%, %dexTitle%
