@@ -1,11 +1,13 @@
-; Start the script with Win+G AFTER choosing NO support character.
-#g::
+; Debug flag
+; Displays a ToolTip with Debug information.
+; True/False
+debug := true
 
 ; Flag for the type of run.
 ; 0: No stamina used. Useful for outside of WoI
 ; 1: Orbs (15 sp)
 ; 2: Summon Boards/Edojas (50 sp)
-farmFlag := 0
+farmFlag := 1
 
 ; Character flags. Use these to optimize the time of each run.
 ; UNIMPLEMENTED
@@ -21,27 +23,27 @@ farmFlag := 0
 charFlag := -1
 
 ; How long to wait between "next" and "retry" (in milliseconds).
-; Default 500/5 seconds.
-sleepRetry := 500
+; Default 5000/5 seconds.
+sleepRetry := 5000
 ; How long to wait for a single run.
-; Set with charFlag. Default is 600ms/1 Minute.
-sleepRun := 600
+; Set with charFlag. Default is 60000ms/1 Minute.
+sleepRun := 60000
 
 ; How long loading takes (in milliseconds).
-; Default 300/3 Seconds.
-sleepLoad := 300
+; Default 3000/3 Seconds.
+sleepLoad := 3000
 
 ; The position to click to hit to start the runs.
-clickStartPosX := 0
-clickStartPosY := 0
+clickStartPosX := 1250
+clickStartPosY := 830
 
 ; The position to click to hit the retry button.
-clickRetryPosX := 0
-clickRetryPosY := 0
+clickRetryPosX := 1030
+clickRetryPosY := 830
 
 ; The position to click to hit the ok button on the Stamina prompt.
-clickStamPosX := 0
-clickStamPosY := 0
+clickStamPosX := 935
+clickStamPosY := 115
 
 ; The number of runs it takes for Stam to run out. Calculated based on farmFlag.
 regRun := 0
@@ -53,12 +55,14 @@ currentStam := 200
 stamPerRun := 0
 
 ; Literally just here so I don't need to update it in multiple places.
-dexTitle := "Sir this is a Wendy's"
+dexTitle := "ahk_exe SamsungDeX.exe"
 
-; Stam auto refill timer. Adds 1 stamina every 60 seconds.
-SetTimer, Stam_Calc, 600
+; Stam auto refill timer. Adds 1 stamina every 3 minutes.
+SetTimer, Stam_Calc, 180000
 
-Switch %farmFlag%
+ControlClick, X%clickStartPosX% Y%clickStartPosY%, %dexTitle%
+
+Switch farmFlag
 {
 	Case 1: ; Orbs.
 		stamPerRun := 15
@@ -68,43 +72,58 @@ Switch %farmFlag%
 		GoTo, No_Stam
 }
 
-Switch %charFlag%
+Switch charFlag
 {
 	; TODO: get list of chars who can solo farm and optimize run time for each one.
 	Case 0: ;Squall's optimization is currently UNIMPLEMENTED
 		sleepRun := 0
 	Case 1: ;Yuffie's optimization is currently UNIMPLEMENTED
 		sleepRun := 0
-	Default
-		sleepRun := 600 ; It already defaults to this but just in case.
+	Default:
+		sleepRun := 60000 ; It already defaults to this but just in case.
 }
 
-ControlClick, %clickStartPosX% %clickStartPosY%, %dexTitle%
+; Experimenting with different start hotkeys for different modes.
+; Start the script with ctrl+shift+a AFTER choosing NO support character.
+^!a::
 
-currentStam := %currentStam% - %stamPerRun%
+currentStam -= stamPerRun
 
-Sleep %sleepLoad% + %sleepRun%
+
+ToolTip, Loading..., 50, 50
+Sleep, %sleepLoad%
+ToolTip, First Run, 50, 50
+Sleep, %sleepRun%
 
 Loop
 {
-	regRun = Format(":d", %currentStam% / %stamPerRun%)
+	regRun := Format("{:d}", currentStam // stamPerRun)
 	
+	
+
 	Loop %regRun%
 	{
 		Loop 2
 		{
-			ControlClick, %clickRetryPosX% %clickRetryPosY%, %dexTitle%
+			ControlClick, X%clickRetryPosX% Y%clickRetryPosY%, %dexTitle%
 			Sleep, %sleepRetry%
 		}
-	
-		Sleep %sleepRun%
+		
+		currentStam -= stamPerRun
+		
+		if(debug)
+		{
+			DebugTip(currentStam, stamPerRun, regRun)
+		}
+		
+		Sleep, %sleepRun%
 	}
 	
-	ControlClick, %clickStamPosX% %clickStamPosY%, %dexTitle%
+	ControlClick, X%clickStamPosX% Y%clickStamPosY%, %dexTitle%
 	Sleep, %sleepRetry%
-	ControlClick, %clickRetryPosX% %clickRetryPosY%, %dexTitle%
-	currentStam := %currentStam% + 200
-	Sleep %sleepRun%
+	ControlClick, X%clickRetryPosX% Y%clickRetryPosY%, %dexTitle%
+	currentStam += 200
+	Sleep, %sleepRun%
 }
 
 No_Stam:
@@ -112,14 +131,21 @@ Loop
 	{
 		Loop 2
 		{
-			ControlClick, %clickRetryPosX% %clickRetryPosY%, %dexTitle%
+			ControlClick, X%clickRetryPosX% Y%clickRetryPosY%, %dexTitle%
 			Sleep, %sleepRetry%
 		}
 	
-		Sleep %sleepRun%
+		Sleep, %sleepRun%
 	}
 
 
+DebugTip(byRef currentStam, byRef stamPerRun, byRef regRun)
+{
+	ToolTip, Debug Window`nCurrent stamina`n%currentStam%`n`nStamina per run`n%stamPerRun%`n`nRuns between refills`n%regRun%, 50, 50
+}
+
 Stam_Calc:
-currentStam := %currentStam% + 1
+currentStam++
 return
+
+^!z::ExitApp
