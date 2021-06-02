@@ -3,11 +3,12 @@
 ; True/False
 debug := true
 
+; DEPRICATED, use hotkeys for Stam/15, Stam/50 and NoStam instead.
 ; Flag for the type of run.
 ; 0: No stamina used. Useful for outside of WoI
 ; 1: Orbs (15 sp)
 ; 2: Summon Boards/Edojas (50 sp)
-farmFlag := 1
+; farmFlag := 1
 
 ; Character flags. Use these to optimize the time of each run.
 ; UNIMPLEMENTED
@@ -62,6 +63,7 @@ SetTimer, Stam_Calc, 180000
 
 ControlClick, X%clickStartPosX% Y%clickStartPosY%, %dexTitle%
 
+/*
 Switch farmFlag
 {
 	Case 1: ; Orbs.
@@ -71,6 +73,7 @@ Switch farmFlag
 	Default: ; No stam grinding.
 		GoTo, No_Stam
 }
+*/
 
 Switch charFlag
 {
@@ -84,60 +87,79 @@ Switch charFlag
 }
 
 ; Experimenting with different start hotkeys for different modes.
+; ctrl+alt+a Stam/15
 ; Start the script with ctrl+shift+a AFTER choosing NO support character.
 ^!a::
+	stamPerRun := 15
+	StamRun(stamPerRun)
+return
 
-currentStam -= stamPerRun
+; ctrl+alt+d Stam/50
+; Start the script with ctrl+shift+a AFTER choosing NO support character.
+^!d::
+	stamPerRun := 50
+	StamRun(stamPerRun)
+return
+
+; ctrl+alt+f Stam/0
+; Start the script with ctrl+shift+a AFTER choosing NO support character.
+^!f::
+	NoStamRun()
+return
 
 
-ToolTip, Loading..., 50, 50
-Sleep, %sleepLoad%
-ToolTip, First Run, 50, 50
-Sleep, %sleepRun%
-
-Loop
+StamRun(beRef stamPerRun)
 {
-	regRun := Format("{:d}", currentStam // stamPerRun)
+	currentStam -= stamPerRun
 	
-	
+	if(debbug){ToolTip, Loading..., 50, 50}
+	Sleep, %sleepLoad%
+	if(debug){ToolTip, First Run, 50, 50}
+	Sleep, %sleepRun%
 
-	Loop %regRun%
+	Loop
 	{
-		Loop 2
+		regRun := Format("{:d}", currentStam // stamPerRun)
+	
+		Loop %regRun%
 		{
-			ControlClick, X%clickRetryPosX% Y%clickRetryPosY%, %dexTitle%
-			Sleep, %sleepRetry%
+			Loop 2
+			{
+				ControlClick, X%clickRetryPosX% Y%clickRetryPosY%, %dexTitle%
+				Sleep, %sleepRetry%
+			}
+		
+			currentStam -= stamPerRun
+		
+			if(debug)
+			{
+				DebugTip(currentStam, stamPerRun, regRun)
+			}
+		
+			Sleep, %sleepRun%
 		}
-		
-		currentStam -= stamPerRun
-		
-		if(debug)
-		{
-			DebugTip(currentStam, stamPerRun, regRun)
-		}
-		
+	
+		ControlClick, X%clickStamPosX% Y%clickStamPosY%, %dexTitle%
+		Sleep, %sleepRetry%
+		ControlClick, X%clickRetryPosX% Y%clickRetryPosY%, %dexTitle%
+		currentStam += 200
 		Sleep, %sleepRun%
 	}
-	
-	ControlClick, X%clickStamPosX% Y%clickStamPosY%, %dexTitle%
-	Sleep, %sleepRetry%
-	ControlClick, X%clickRetryPosX% Y%clickRetryPosY%, %dexTitle%
-	currentStam += 200
-	Sleep, %sleepRun%
 }
 
-No_Stam:
-Loop
-	{
-		Loop 2
+NoStamRun()
+{
+	Loop
 		{
-			ControlClick, X%clickRetryPosX% Y%clickRetryPosY%, %dexTitle%
-			Sleep, %sleepRetry%
-		}
+			Loop 2
+			{
+				ControlClick, X%clickRetryPosX% Y%clickRetryPosY%, %dexTitle%
+				Sleep, %sleepRetry%
+			}
 	
-		Sleep, %sleepRun%
-	}
-
+			Sleep, %sleepRun%
+		}
+}
 
 DebugTip(byRef currentStam, byRef stamPerRun, byRef regRun)
 {
@@ -147,5 +169,6 @@ DebugTip(byRef currentStam, byRef stamPerRun, byRef regRun)
 Stam_Calc:
 currentStam++
 return
+
 
 ^!z::ExitApp
